@@ -541,6 +541,17 @@ func Do(addr string, buf []byte, args ...[]byte) (resp []byte, nbuf []byte, err 
 	return resp, cmd[:0], err
 }
 
+// DoConn same as Do command just no dial
+func DoConn(conn net.Conn, buf []byte, args ...[]byte) (resp []byte, nbuf []byte, err error) {
+	cmd := buildCommand(buf, args...)
+
+	if _, err = conn.Write(cmd); err != nil {
+		return nil, cmd, err
+	}
+	resp, err = response(bufio.NewReader(conn))
+	return resp, cmd[:0], err
+}
+
 func response(rd *bufio.Reader) ([]byte, error) {
 	c, err := rd.ReadByte()
 	if err != nil {
