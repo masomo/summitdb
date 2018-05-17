@@ -414,15 +414,13 @@ func (n *Node) watchLeader() {
 	currentLeader := n.raft.Leader()
 
 	for {
-		time.Sleep(500 * time.Millisecond)
+		time.Sleep(250 * time.Millisecond)
 
-		if n.raft.Leader() == "" {
+		if n.raft.Leader() == "" || n.raft.State() == raft.Leader {
 			continue
 		}
 
-		if n.raft.State() == raft.Leader {
-			continue
-		} else if n.raft.State() == raft.Follower && currentLeader != n.raft.Leader() {
+		if n.raft.State() == raft.Follower && currentLeader != n.raft.Leader() {
 			if n.leaderConn != nil {
 				n.leaderConn.Close()
 			}
