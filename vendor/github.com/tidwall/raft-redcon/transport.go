@@ -541,8 +541,8 @@ func Do(addr string, buf []byte, args ...[]byte) (resp []byte, nbuf []byte, err 
 	return resp, cmd[:0], err
 }
 
-// DoConn same as Do command just no dial
-func DoConn(conn net.Conn, buf []byte, args ...[]byte) (resp []byte, nbuf []byte, err error) {
+// DoRaw same as Do command just no dial
+func DoRaw(conn net.Conn, buf []byte, args ...[]byte) (resp []byte, nbuf []byte, err error) {
 	cmd := buildCommand(buf, args...)
 
 	if _, err = conn.Write(cmd); err != nil {
@@ -557,6 +557,7 @@ func response(rd *bufio.Reader) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
+
 	switch c {
 	default:
 		return nil, errors.New("invalid response")
