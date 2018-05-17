@@ -382,9 +382,7 @@ func Open(dir, addr, join string, handler Machine, opts *Options) (node *Node, e
 		}
 		break
 	}
-
 	go n.watchPeers()
-
 	return n, nil
 }
 
@@ -839,7 +837,6 @@ func (m *nodeApplier) Apply(
 	if err != nil {
 		return nil, err
 	}
-
 	// responde
 	return respond(val)
 }
