@@ -546,7 +546,6 @@ func response(rd *bufio.Reader) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-
 	switch c {
 	default:
 		return nil, errors.New("invalid response")
