@@ -847,7 +847,7 @@ func (m *nodeApplier) Apply(
 	} else {
 		// this is happening on the leader node.
 		// apply the command to the raft log.
-		if m.leaderConn != nil && m.raft.State() != raft.Leader {
+		if m.level == Low && m.leaderConn != nil && m.raft.State() != raft.Leader {
 			// try forward request to leader
 			val, _, err = raftredcon.DoConn(m.leaderConn, nil, cmd.Args...)
 		} else {
