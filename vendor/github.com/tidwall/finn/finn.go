@@ -196,20 +196,19 @@ type Machine interface {
 
 // Node represents a Raft server node.
 type Node struct {
-	mu         sync.RWMutex
-	addr       string
-	snapshot   raft.SnapshotStore
-	trans      *raftredcon.RedconTransport
-	raft       *raft.Raft
-	log        *redlog.Logger // the node logger
-	mlog       *redlog.Logger // the machine logger
-	leaderConn net.Conn
-	closed     bool
-	opts       *Options
-	level      Level
-	handler    Machine
-	store      bigStore
-	peers      map[string]string
+	mu       sync.RWMutex
+	addr     string
+	snapshot raft.SnapshotStore
+	trans    *raftredcon.RedconTransport
+	raft     *raft.Raft
+	log      *redlog.Logger // the node logger
+	mlog     *redlog.Logger // the machine logger
+	closed   bool
+	opts     *Options
+	level    Level
+	handler  Machine
+	store    bigStore
+	peers    map[string]string
 }
 
 // bigStore represents a raft store that conforms to
@@ -384,7 +383,6 @@ func Open(dir, addr, join string, handler Machine, opts *Options) (node *Node, e
 		break
 	}
 
-	go n.watchLeader()
 	go n.watchPeers()
 
 	return n, nil
@@ -407,33 +405,6 @@ func (n *Node) Close() error {
 	}
 	n.closed = true
 	return nil
-}
-
-func (n *Node) watchLeader() {
-	var err error
-
-	currentLeader := n.raft.Leader()
-
-	for {
-		time.Sleep(250 * time.Millisecond)
-
-		if n.raft.Leader() == "" || n.raft.State() == raft.Leader {
-			continue
-		}
-
-		if n.raft.State() == raft.Follower && currentLeader != n.raft.Leader() {
-			if n.leaderConn != nil {
-				n.leaderConn.Close()
-			}
-
-			n.leaderConn, err = net.DialTimeout("tcp", n.raft.Leader(), time.Second)
-			if err != nil {
-				n.log.Warningf("Failed to connect to leader \"%s\"", n.raft.Leader())
-			}
-
-			currentLeader = n.raft.Leader()
-		}
-	}
 }
 
 func (n *Node) watchPeers() {
@@ -849,9 +820,9 @@ func (m *nodeApplier) Apply(
 	} else {
 		// this is happening on the leader node.
 		// apply the command to the raft log.
-		if m.level == Low && m.leaderConn != nil && m.raft.State() != raft.Leader {
+		if m.level == Low && m.raft.Leader() != "" && m.raft.State() != raft.Leader {
 			// try forward request to leader
-			resp, _, err = raftredcon.DoRaw(m.leaderConn, nil, cmd.Args...)
+			resp, _, err = raftredcon.Do(m.raft.Leader(), nil, cmd.Args...)
 			if err != nil {
 				return nil, err
 			}
