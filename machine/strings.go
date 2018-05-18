@@ -284,7 +284,7 @@ func (m *Machine) doIncr(a finn.Applier, conn redcon.Conn, cmd redcon.Command, t
 	if len(cmd.Args) < 2 {
 		return nil, finn.ErrWrongNumberOfArguments
 	}
-	var amt int64
+	var amt int
 	switch qcmdlower(cmd.Args[0]) {
 	default:
 		return nil, finn.ErrUnknownCommand
@@ -296,7 +296,7 @@ func (m *Machine) doIncr(a finn.Applier, conn redcon.Conn, cmd redcon.Command, t
 		if len(cmd.Args) != 3 {
 			return nil, finn.ErrWrongNumberOfArguments
 		}
-		n, err := strconv.ParseInt(string(cmd.Args[2]), 10, 64)
+		n, err := strconv.Atoi(string(cmd.Args[2]))
 		if err != nil {
 			return nil, errNotAnInt
 		}
@@ -312,22 +312,22 @@ func (m *Machine) doIncr(a finn.Applier, conn redcon.Conn, cmd redcon.Command, t
 		if err != nil && err != buntdb.ErrNotFound {
 			return nil, err
 		}
-		var n int64
+		var n int
 		if val != "" {
-			n, err = strconv.ParseInt(val, 10, 64)
+			n, err = strconv.Atoi(val)
 			if err != nil {
 				return nil, errNotAnInt
 			}
 		}
 		n += amt
-		val = strconv.FormatInt(n, 10)
+		val = strconv.Itoa(n)
 		_, _, err = tx.Set(key, val, nil)
 		if err != nil {
 			return nil, err
 		}
 		return n, nil
 	}, func(v interface{}) error {
-		conn.WriteInt64(v.(int64))
+		conn.WriteInt(v.(int))
 		return nil
 	})
 }
