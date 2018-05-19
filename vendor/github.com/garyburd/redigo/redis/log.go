@@ -18,6 +18,7 @@ import (
 	"bytes"
 	"fmt"
 	"log"
+	"net"
 )
 
 // NewLoggingConn returns a logging wrapper around a connection.
@@ -32,6 +33,10 @@ type loggingConn struct {
 	Conn
 	logger *log.Logger
 	prefix string
+}
+
+func (c *loggingConn) NetConn() net.Conn {
+	return c.Conn.NetConn()
 }
 
 func (c *loggingConn) Close() error {

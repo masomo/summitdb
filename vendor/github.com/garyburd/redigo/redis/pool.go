@@ -21,6 +21,7 @@ import (
 	"crypto/sha1"
 	"errors"
 	"io"
+	"net"
 	"strconv"
 	"sync"
 	"time"
@@ -363,8 +364,16 @@ func (pc *pooledConnection) Close() error {
 	return nil
 }
 
+func (pc *pooledConnection) Fatal(err error) {
+	pc.c.Fatal(err)
+}
+
 func (pc *pooledConnection) Err() error {
 	return pc.c.Err()
+}
+
+func (pc *pooledConnection) NetConn() net.Conn {
+	return pc.c.NetConn()
 }
 
 func (pc *pooledConnection) Do(commandName string, args ...interface{}) (reply interface{}, err error) {
@@ -390,6 +399,8 @@ func (pc *pooledConnection) Receive() (reply interface{}, err error) {
 type errorConnection struct{ err error }
 
 func (ec errorConnection) Do(string, ...interface{}) (interface{}, error) { return nil, ec.err }
+func (ec errorConnection) NetConn() net.Conn                              { return nil }
+func (ec errorConnection) Fatal(error)                                    {}
 func (ec errorConnection) Send(string, ...interface{}) error              { return ec.err }
 func (ec errorConnection) Err() error                                     { return ec.err }
 func (ec errorConnection) Close() error                                   { return ec.err }

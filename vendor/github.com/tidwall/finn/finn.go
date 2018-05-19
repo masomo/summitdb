@@ -9,7 +9,6 @@ import (
 	"os"
 	"path/filepath"
 	"sort"
-	"strconv"
 	"strings"
 	"sync"
 	"sync/atomic"
@@ -572,6 +571,7 @@ func (n *Node) doCommand(conn redcon.Conn, cmd redcon.Command) (interface{}, err
 		}
 		conn.WriteError(n.translateError(err, string(cmd.Args[0])))
 	}
+
 	return val, err
 }
 
@@ -818,21 +818,27 @@ func (m *nodeApplier) Apply(
 	} else {
 		// this is happening on the leader node.
 		// apply the command to the raft log.
-		if m.level == Low && m.raft.Leader() != "" && m.raft.State() != raft.Leader {
-			// try forward request to leader
-			resp, _, err = raftredcon.Do(m.raft.Leader(), nil, cmd.Args...)
+		if m.level == Low && m.raft.Leader() != "" && m.raft.State() == raft.Follower {
+			// pass to leader
+			resp, err = m.trans.DoRaw(m.raft.Leader(), nil, cmd.Args...)
 			if err != nil {
 				return nil, err
 			}
 
-			if string(resp) == "OK" {
-				val = string(resp)
-			} else {
-				val, err = strconv.Atoi(string(resp))
+			if strings.ToLower(string(cmd.Args[0])) == "plset" {
+				for i := 1; i < len(cmd.Args); i += 2 {
+					conn.WriteString("OK")
+				}
+
+				return nil, nil
 			}
-		} else {
-			val, err = (*Node)(m).raftApplyCommand(cmd)
+
+			conn.WriteRaw(resp)
+
+			return nil, nil
 		}
+
+		val, err = (*Node)(m).raftApplyCommand(cmd)
 	}
 	if err != nil {
 		return nil, err

@@ -67,7 +67,7 @@ func NewRedconTransport(
 // newTargetPool returns a Redigo pool for the specified target node.
 func newTargetPool(target string) *redis.Pool {
 	return &redis.Pool{
-		MaxIdle:     5,           // figure 5 should suffice most clusters.
+		MaxIdle:     512,         // figure 512 should suffice most clusters.
 		IdleTimeout: time.Minute, //
 		Dial: func() (redis.Conn, error) {
 			c, err := redis.Dial("tcp", target)
@@ -503,6 +503,40 @@ func (t *RedconTransport) handle(conn redcon.Conn, cmd redcon.Command) {
 	} else {
 		conn.WriteBulk(res)
 	}
+}
+
+// DoRaw helper of redis pool
+func (t *RedconTransport) DoRaw(target string, buf []byte, args ...[]byte) (resp []byte, err error) {
+	cmd := buildCommand(buf, args...)
+	conn, err := t.getConn(target)
+	if err != nil {
+		return nil, err
+	}
+	defer conn.Close()
+
+	netconn := conn.NetConn()
+	if netconn == nil {
+		err = fmt.Errorf("connection closed")
+		conn.Fatal(err)
+		return nil, err
+	}
+
+	bw := bufio.NewWriter(netconn)
+	br := bufio.NewReader(netconn)
+
+	if _, err = bw.Write(cmd); err != nil {
+		conn.Fatal(err)
+		return nil, err
+	}
+
+	if err := bw.Flush(); err != nil {
+		conn.Fatal(err)
+		return nil, err
+	}
+
+	resp, _, err = ReadRawResponse(br)
+
+	return resp, err
 }
 
 // Consumer implmenents the Transport interface.

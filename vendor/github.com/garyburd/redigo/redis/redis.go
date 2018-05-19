@@ -14,6 +14,8 @@
 
 package redis
 
+import "net"
+
 // Error represents an error returned in a command reply.
 type Error string
 
@@ -29,6 +31,12 @@ type Conn interface {
 	// network connection or a protocol parsing error. Applications should
 	// close broken connections.
 	Err() error
+
+	// Conn return net connection
+	NetConn() net.Conn
+
+	// Fatal errors
+	Fatal(error)
 
 	// Do sends a command to the server and returns the received reply.
 	Do(commandName string, args ...interface{}) (reply interface{}, err error)
