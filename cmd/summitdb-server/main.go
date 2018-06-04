@@ -41,7 +41,7 @@ func main() {
 	log := redlog.New(os.Stderr)
 
 	var opts finn.Options
-	opts.Backend = finn.FastLog
+	opts.Backend = finn.Bolt
 
 	switch strings.ToLower(durability) {
 	default:
