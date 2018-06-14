@@ -139,6 +139,7 @@ func (m *Machine) reopenBlankDB(rd io.Reader, onExpired func(keys []string)) err
 	if err := db.ReadConfig(&cfg); err != nil {
 		return err
 	}
+	cfg.AutoShrinkDisabled = true
 	cfg.OnExpired = func(keys []string) { onExpired(keys) }
 	if err := db.SetConfig(cfg); err != nil {
 		return err
