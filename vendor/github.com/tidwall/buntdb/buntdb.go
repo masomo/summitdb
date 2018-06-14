@@ -527,6 +527,13 @@ func (db *DB) backgroundManager() {
 		// database thus allowing for access to anything we need.
 		var onExpired func([]string)
 		var expired []string
+
+		now := time.Now()
+		if db.persist && db.config.AutoShrinkDisabled &&
+			now.Hour() == 3 && now.Minute() == 0 && now.Second() >= 0 && now.Second() <= 1 {
+			shrink = true
+		}
+
 		err := db.Update(func(tx *Tx) error {
 			onExpired = db.config.OnExpired
 			if db.persist && !db.config.AutoShrinkDisabled {
@@ -580,6 +587,7 @@ func (db *DB) backgroundManager() {
 				flushes = db.flushes
 			}
 		}()
+
 		if shrink {
 			if err = db.Shrink(); err != nil {
 				if err == ErrDatabaseClosed {
