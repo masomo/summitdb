@@ -305,8 +305,8 @@ func (b *FastLogStore) shrink() error {
 			buf = append(buf, num...)
 			buf = bufferLog(buf, log)
 			buffered++
-			// flush every 64MB or 1000 items
-			if len(buf) > 64*1024*1024 || buffered == 1000 {
+			// flush every 8MB or 1000 items
+			if len(buf) > minShrinkSize || buffered == 1000 {
 				b.mu.RUnlock()
 				if _, err := nf.Write(buf); err != nil {
 					return err
