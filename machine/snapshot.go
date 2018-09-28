@@ -63,9 +63,14 @@ func (m *Machine) Restore(rd io.Reader) error {
 
 // Snapshot creates a snapshot
 func (m *Machine) Snapshot(wr io.Writer) error {
+	err := m.db.Shrink()
+	if err != nil {
+		return err
+	}
+
 	var pos int64
 	var file string
-	err := func() error {
+	err = func() error {
 		m.mu.RLock()
 		defer m.mu.RUnlock()
 		f, err := os.Open(m.file)

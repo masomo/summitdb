@@ -311,8 +311,9 @@ func Open(dir, addr, join string, handler Machine, opts *Options) (node *Node, e
 	// Setup Raft configuration.
 	config := raft.DefaultConfig()
 	config.LogOutput = n.log
-	config.SnapshotInterval = time.Minute
-	config.SnapshotThreshold = 1024 * 1024
+
+	config.SnapshotInterval = 24 * time.Hour
+	config.SnapshotThreshold = 1e9
 
 	// Allow the node to enter single-mode, potentially electing itself, if
 	// explicitly enabled and there is only 1 node in the cluster already.
