@@ -68,6 +68,10 @@ func (kvm *KVM) Command(m Applier, conn redcon.Conn, cmd redcon.Command) (interf
 	}
 }
 
+func (kvm *KVM) Shrink() error {
+	return nil
+}
+
 func (kvm *KVM) Restore(rd io.Reader) error {
 	kvm.mu.Lock()
 	defer kvm.mu.Unlock()

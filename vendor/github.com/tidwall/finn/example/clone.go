@@ -191,6 +191,11 @@ func (kvm *Clone) Command(m finn.Applier, conn redcon.Conn, cmd redcon.Command) 
 	}
 }
 
+// Shrink shrink db
+func (kvm *Clone) Shrink() error {
+	return nil
+}
+
 // Restore restores a snapshot
 func (kvm *Clone) Restore(rd io.Reader) error {
 	kvm.mu.Lock()
