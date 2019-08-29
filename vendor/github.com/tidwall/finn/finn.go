@@ -191,6 +191,9 @@ type Machine interface {
 	// Snapshot is used to support log compaction. This call should write a
 	// snapshot to the provided writer.
 	Snapshot(wr io.Writer) error
+
+	// Shrink buntdb
+	Shrink() error
 }
 
 // Node represents a Raft server node.
@@ -312,8 +315,8 @@ func Open(dir, addr, join string, handler Machine, opts *Options) (node *Node, e
 	config := raft.DefaultConfig()
 	config.LogOutput = n.log
 
-	config.SnapshotInterval = 24 * time.Hour
-	config.SnapshotThreshold = 1e9
+	config.SnapshotInterval = 24 * time.Hour * 30
+	config.SnapshotThreshold = 1e18
 
 	// Allow the node to enter single-mode, potentially electing itself, if
 	// explicitly enabled and there is only 1 node in the cluster already.
@@ -554,6 +557,8 @@ func (n *Node) doCommand(conn redcon.Conn, cmd redcon.Command) (interface{}, err
 		val, err = n.doRaftStats(conn, cmd)
 	case "raftpeers":
 		val, err = n.doRaftPeers(conn, cmd)
+	case "buntdbshrink":
+		val, err = n.doBuntDBShrink(conn, cmd)
 	case "quit":
 		val, err = n.doQuit(conn, cmd)
 	case "ping":
@@ -616,6 +621,21 @@ func (n *Node) doRaftSnapshot(conn redcon.Conn, cmd redcon.Command) (interface{}
 		conn.WriteError("ERR " + err.Error())
 		return nil, nil
 	}
+	conn.WriteString("OK")
+	return nil, nil
+}
+
+func (n *Node) doBuntDBShrink(conn redcon.Conn, cmd redcon.Command) (interface{}, error) {
+	if len(cmd.Args) != 1 {
+		return nil, ErrWrongNumberOfArguments
+	}
+
+	err := n.handler.Shrink()
+	if err != nil {
+		conn.WriteError("ERR " + err.Error())
+		return nil, nil
+	}
+
 	conn.WriteString("OK")
 	return nil, nil
 }

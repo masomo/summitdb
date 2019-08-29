@@ -40,6 +40,10 @@ func New(log finn.Logger, addr string) (*Machine, error) {
 	return m, nil
 }
 
+func (m *Machine) Shrink() error {
+	return m.db.Shrink()
+}
+
 func (m *Machine) Close() error {
 	return m.db.Close()
 }
