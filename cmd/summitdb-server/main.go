@@ -10,7 +10,7 @@ import (
 	"github.com/tidwall/finn"
 	"github.com/tidwall/redcon"
 	"github.com/tidwall/redlog"
-	"github.com/tidwall/summitdb/machine"
+	"github.com/masomo/summitdb/machine"
 )
 
 var version = "0.0.1"

@@ -15,9 +15,9 @@ import (
 	"time"
 
 	"github.com/hashicorp/raft"
-	"github.com/tidwall/raft-boltdb"
-	"github.com/tidwall/raft-fastlog"
-	"github.com/tidwall/raft-redcon"
+	raftboltdb "github.com/tidwall/raft-boltdb"
+	raftfastlog "github.com/tidwall/raft-fastlog"
+	raftredcon "github.com/tidwall/raft-redcon"
 	"github.com/tidwall/redcon"
 	"github.com/tidwall/redlog"
 )
@@ -315,6 +315,7 @@ func Open(dir, addr, join string, handler Machine, opts *Options) (node *Node, e
 	config := raft.DefaultConfig()
 	config.LogOutput = n.log
 
+	config.ShutdownOnRemove = false
 	config.SnapshotInterval = 24 * time.Hour * 30
 	config.SnapshotThreshold = 1e18
 
